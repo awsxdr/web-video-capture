@@ -2,7 +2,12 @@
 
 #include <iostream>
 #include <string>
+
+#if __has_include(<format>)
 #include <format>
+#else
+#warning "Logging is only available when compiled with a compiler supported <format>.";
+#endif
 
 namespace web_video_capture
 {
@@ -76,7 +81,11 @@ namespace web_video_capture
 		{
 			if (log_level_ < log_level) return;
 
+#ifdef __cpp_lib_format
 			auto const formatted_message = vformat(message, make_format_args(args...));
+#else
+			auto const formatted_message = message;
+#endif
 
 			cout << formatted_message << endl;
 		}
