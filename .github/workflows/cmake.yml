@@ -34,7 +34,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: build-windows
-        path: ${{github.workspace}}/build
+        path: ${{github.workspace}}/build/web-video-capture.exe
 
   build-linux:
     runs-on: ubuntu-latest
@@ -60,5 +60,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: build-linux
-        path: ${{github.workspace}}/build
+        path: ${{github.workspace}}/build/web-video-capture
 
