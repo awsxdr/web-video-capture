@@ -17,3 +17,9 @@ add_subdirectory(deps)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	add_compile_definitions("DEBUG")
 endif()
+
+include_directories(
+	websocketpp
+	"${cxxopts_SOURCE_DIR}/include"
+	"${json_dir}/include"
+)

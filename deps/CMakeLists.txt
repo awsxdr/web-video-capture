@@ -1,2 +1,3 @@
 add_subdirectory(websocketpp)
 add_subdirectory(json)
+add_subdirectory(cxxopts)
