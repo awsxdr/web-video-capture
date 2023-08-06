@@ -20,6 +20,7 @@ string chrome_finder::get_chrome_path()
 #ifdef WIN32
 	return get_chrome_path_from_windows_registry();
 #else
+	return "chromium-browser";
 #endif
 }
 

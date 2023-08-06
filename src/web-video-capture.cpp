@@ -1,14 +1,16 @@
 #include "logger.hpp"
-#include "exceptions.hpp"
 #include "chrome-finder.hpp"
+#include "chrome-debug-connector.hpp"
 
 #include <cxxopts.hpp>
 #include <process.hpp>
+#include <fmt/core.h>
 
 #include <filesystem>
 #include <functional>
 #include <string>
 #include <tuple>
+
 
 using namespace std;
 using namespace web_video_capture;
@@ -16,21 +18,30 @@ using namespace TinyProcessLib;
 
 const string default_log_level = "error";
 const string default_capture_time = "0";
+const string default_debug_port = "9223";
 
-typedef tuple<string, int, log_levels> command_line_parameters;
+typedef tuple<string, int, int, log_levels> command_line_parameters;
 
 command_line_parameters parse_options(const int argument_count, const char** arguments);
 
 int main(const int argument_count, const char** arguments)
 {
 	//auto const [url, capture_time, log_level] = parse_options(argument_count, arguments);
-	auto const [url, capture_time, log_level] = make_tuple(string("https://news.bbc.co.uk"), 0, web_video_capture::log_levels::trace);
+	auto const [url, capture_time, debug_port, log_level] = make_tuple(string("https://news.bbc.co.uk"), 0, 9223, web_video_capture::log_levels::trace);
 
 	auto const temp_chrome_profile_path = filesystem::temp_directory_path() / "web-video-capture-chrome-profile";
 
 	auto chrome_process = Process(
-		chrome_finder::get_chrome_path() + " --remote-debugging-port=9223 --headless=chrome --disable-gpu --user-data-dir=" + temp_chrome_profile_path.string() + " " + url,
+		fmt::format(
+			"{} --remote-debugging-port={} --headless=chrome --disable-gpu --user-data-dir={} {}",
+			chrome_finder::get_chrome_path(),
+			debug_port,
+			temp_chrome_profile_path.string(),
+			url
+		),
 		"");
+
+	auto const debug_connector = chrome_debug_connector(debug_port);
 
 	Process::kill(chrome_process.get_id());
 
@@ -46,6 +57,7 @@ command_line_parameters parse_options(const int argument_count, const char** arg
 	options.add_options()
 		("u,url", "URL to capture", cxxopts::value<std::string>())
 		("t,recordtime", "Length of time to capture in milliseconds", cxxopts::value<int>()->default_value(default_capture_time))
+		("p,debugport", "Port to use for communicating with Chromium instance", cxxopts::value<int>()->default_value(default_debug_port))
 		("l,loglevel", "Logging level", cxxopts::value<string>()->default_value(default_log_level))
 		;
 
@@ -70,5 +82,6 @@ command_line_parameters parse_options(const int argument_count, const char** arg
 	return std::make_tuple(
 		parsed_options["url"].as<string>(),
 		parsed_options["recordtime"].as<int>(),
+		parsed_options["debugport"].as<int>(),
 		log_level);
 }
