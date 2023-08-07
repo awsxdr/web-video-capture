@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.14)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -30,9 +30,11 @@ target_link_directories(web-video-capture PUBLIC "${tiny_process_library_build}"
 if (WIN32)
 	set(copy_cmd xcopy )
 	set(copy_post_cmd  /Y)
+	set(link_extension .dll)
 else()
 	set(copy_cmd cp -f )
 	set(copy_post_cmd)
+	set(link_extension .so)
 endif()
 
 
@@ -47,8 +49,15 @@ endif()
 target_link_libraries(web-video-capture PUBLIC 
 	"tiny-process-library${lib_extension}"
 	"${fmt_name}${lib_extension}"
-	"${curl_name}_imp${lib_extension}"
 )
+
+if (WIN32)
+	target_link_libraries(web-video-capture PUBLIC
+		"${curl_name}_imp${lib_extension}")
+else()
+	target_link_libraries(web-video-capture PUBLIC
+		"${curl_name}${lib_extension}")
+endif()
 
 include_directories(
 	websocketpp
@@ -59,11 +68,11 @@ include_directories(
 	"${curl_src}/include"
 )
 
-set(fmt_dll_path "${fmt_bin}/bin/${fmt_name}.dll")
-cmake_path(NATIVE_PATH fmt_dll_path NORMALIZE fmt_dll_path_native)
-set(curl_dll_path "${curl_bin}/lib/${curl_name}.dll")
-cmake_path(NATIVE_PATH curl_dll_path NORMALIZE curl_dll_path_native)
-cmake_path(NATIVE_PATH CMAKE_CURRENT_BINARY_DIR NORMALIZE binary_dir_native)
+set(fmt_dll_path "${fmt_bin}/bin/${fmt_name}${link_extension}")
+string(REPLACE "/" "\\" fmt_dll_path_native "${fmt_dll_path}")
+set(curl_dll_path "${curl_bin}/lib/${curl_name}${link_extension}")
+string(REPLACE "/" "\\" curl_dll_path_native "${curl_dll_path}")
+string(REPLACE "/" "\\" binary_dir_native "${CMAKE_CURRENT_BINARY_DIR}")
 
 add_custom_command(
 	TARGET web-video-capture POST_BUILD
