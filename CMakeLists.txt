@@ -48,15 +48,18 @@ endif()
 
 target_link_libraries(web-video-capture PUBLIC 
 	"tiny-process-library${lib_extension}"
-	"${fmt_name}${lib_extension}"
 )
 
 if (WIN32)
 	target_link_libraries(web-video-capture PUBLIC
-		"${curl_name}_imp${lib_extension}")
+		"${curl_name}_imp.lib"
+		"${fmt_name}.lib"
+	)
 else()
 	target_link_libraries(web-video-capture PUBLIC
-		"${curl_name}${lib_extension}")
+		"${curl_name}.so"
+		"lib${fmt_name}.so"
+	)
 endif()
 
 include_directories(
@@ -68,15 +71,17 @@ include_directories(
 	"${curl_src}/include"
 )
 
-set(fmt_dll_path "${fmt_bin}/bin/${fmt_name}${link_extension}")
-string(REPLACE "/" "\\" fmt_dll_path_native "${fmt_dll_path}")
-set(curl_dll_path "${curl_bin}/lib/${curl_name}${link_extension}")
-string(REPLACE "/" "\\" curl_dll_path_native "${curl_dll_path}")
-string(REPLACE "/" "\\" binary_dir_native "${CMAKE_CURRENT_BINARY_DIR}")
+if(WIN32)
+	set(fmt_dll_path "${fmt_bin}/bin/${fmt_name}${link_extension}")
+	string(REPLACE "/" "\\" fmt_dll_path_native "${fmt_dll_path}")
+	set(curl_dll_path "${curl_bin}/lib/${curl_name}${link_extension}")
+	string(REPLACE "/" "\\" curl_dll_path_native "${curl_dll_path}")
+	string(REPLACE "/" "\\" binary_dir_native "${CMAKE_CURRENT_BINARY_DIR}")
 
-add_custom_command(
-	TARGET web-video-capture POST_BUILD
-	COMMAND 
-		${copy_cmd} ${fmt_dll_path_native} ${binary_dir_native} ${copy_post_cmd} &&
-		${copy_cmd} ${curl_dll_path_native} ${binary_dir_native} ${copy_post_cmd}
-)
+	add_custom_command(
+		TARGET web-video-capture POST_BUILD
+		COMMAND 
+			${copy_cmd} ${fmt_dll_path_native} ${binary_dir_native} ${copy_post_cmd} &&
+			${copy_cmd} ${curl_dll_path_native} ${binary_dir_native} ${copy_post_cmd}
+	)
+endif()
