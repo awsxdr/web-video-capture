@@ -27,9 +27,9 @@ get_property(curl_bin GLOBAL PROPERTY CURL_BUILD_DIR)
 
 target_link_directories(web-video-capture PUBLIC "${tiny_process_library_build}" "${fmt_bin}" "${curl_bin}/lib")
 
-find_package(curl REQUIRED)
-
 if (WIN32)
+	find_package(curl REQUIRED)
+
 	set(copy_cmd xcopy )
 	set(copy_post_cmd  /Y)
 	set(link_extension .dll)
