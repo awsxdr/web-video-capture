@@ -8,6 +8,7 @@
 #include <process.hpp>
 #include <fmt/core.h>
 
+#include <chrono>
 #include <filesystem>
 #include <functional>
 #include <string>
@@ -43,7 +44,15 @@ int main(const int argument_count, const char** arguments)
 		),
 		"");
 
-	auto const debug_connector = chrome_debug_connector(debug_port);
+	auto debug_connector = chrome_debug_connector(debug_port);
+	debug_connector.start_capture();
+
+	auto const end_time = chrono::steady_clock::now() + chrono::seconds(10);
+
+	while(chrono::steady_clock::now() < end_time)
+	{
+		this_thread::sleep_for(chrono::milliseconds(10));
+	}
 
 	Process::kill(chrome_process.get_id());
 
@@ -52,7 +61,7 @@ int main(const int argument_count, const char** arguments)
 	{		
 	}
 
-	filesystem::remove_all(temp_chrome_profile_path);
+	//filesystem::remove_all(temp_chrome_profile_path);
 
 	return 0;
 }

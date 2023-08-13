@@ -8,7 +8,7 @@ endif()
 
 project(web-video-capture LANGUAGES C CXX)
 
-add_executable(web-video-capture "src/web-video-capture.cpp" "src/exceptions.hpp" "src/chrome-finder.cpp" "src/chrome-debug-connector.cpp" )
+add_executable(web-video-capture "src/web-video-capture.cpp" "src/exceptions.hpp" "src/chrome-finder.cpp" "src/chrome-debug-connector.cpp"  )
 
 set_property(TARGET web-video-capture PROPERTY CXX_STANDARD 20)
 

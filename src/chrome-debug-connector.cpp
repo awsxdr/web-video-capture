@@ -7,6 +7,8 @@
 #include <nlohmann/json.hpp>
 
 #include <chrono>
+#include <fstream>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <thread>
@@ -21,7 +23,8 @@ string get_debug_info_json(int port);
 int write_curl_buffer(const char* data, size_t size, size_t member_count, string* buffer);
 websocketpp::log::level get_socket_level_for_logging_level(log_levels log_level);
 
-chrome_debug_connector::chrome_debug_connector(int port)
+chrome_debug_connector::chrome_debug_connector(int port) :
+	next_message_id_(0)
 {
 	auto const debug_info_json = get_debug_info_json(port);
 	auto const debug_info = json::parse(debug_info_json);
@@ -30,24 +33,19 @@ chrome_debug_connector::chrome_debug_connector(int port)
 	socket_ = make_unique<websocket_client>();
 
 	configure_socket(web_socket_debug_url);
+	open_socket(web_socket_debug_url);
 
-	is_open_ = false;
 
-	error_code error_code;
-	connection_ = socket_->get_connection(web_socket_debug_url, error_code);
-
-	socket_->connect(connection_);
-
-	listen_thread_ = thread([this]()
-		{
-			socket_->run();
-		});
-
-	while(!is_open_)
-	{
-		this_thread::sleep_for(chrono::milliseconds(10));
-	}
 }
+
+void chrome_debug_connector::start_capture()
+{
+	send_message(
+		"Page.startScreencast",
+		{}
+	);
+}
+
 
 void chrome_debug_connector::configure_socket(const std::string& web_socket_url)
 {
@@ -60,9 +58,60 @@ void chrome_debug_connector::configure_socket(const std::string& web_socket_url)
 	socket_->set_open_handler([this](auto&& handle) { handle_socket_open(handle); });
 }
 
+void chrome_debug_connector::open_socket(const std::string& web_socket_url)
+{
+	is_open_ = false;
+
+	error_code error_code;
+	connection_ = socket_->get_connection(web_socket_url, error_code);
+
+	socket_->connect(connection_);
+
+	listen_thread_ = thread([this]()
+		{
+			socket_->run();
+		});
+
+	while (!is_open_)
+	{
+		this_thread::sleep_for(chrono::milliseconds(10));
+	}
+}
+
+void chrome_debug_connector::send_message(const std::string method, const nlohmann::json parameters)
+{
+	const json message = {
+		{"id", next_message_id_++},
+		{"method", method},
+		{"params", parameters}
+	};
+
+	auto const message_string = message.dump();
+
+	socket_->send(connection_, message_string.c_str(), message_string.length(), websocketpp::frame::opcode::TEXT);
+}
+
+
 void chrome_debug_connector::handle_message(const websocketpp::connection_hdl connection, const message_ptr& message)
 {
-	
+	//ofstream file(R"(C:\Users\adage\Desktop\test.png)");
+	ofstream file;
+	file.open("test.png", std::ios_base::binary);
+
+	auto const payload = message->get_payload();
+	auto const json = json::parse(payload);
+
+	if(!json.contains("method") || json["method"].get<string>() != "Page.screencastFrame")
+	{
+		return;
+	}
+
+	auto const data = json["params"]["data"].get<string>();
+	auto const decoded_data = websocketpp::base64_decode(data);
+
+	file.write(decoded_data.c_str(), decoded_data.length());
+	file.flush();
+	file.close();
 }
 
 void chrome_debug_connector::handle_socket_open(const websocketpp::connection_hdl connection)

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nlohmann/json.hpp>
+
 #include <memory>
 #include <string>
 #include <thread>
@@ -18,12 +20,18 @@ namespace web_video_capture
 		websocket_client::connection_ptr connection_;
 		std::thread listen_thread_;
 		bool is_open_;
+		int next_message_id_;
 
 		void configure_socket(const std::string& web_socket_url);
+		void open_socket(const std::string& web_socket_url);
+
+		void send_message(std::string method, nlohmann::json parameters);
+
 		void handle_message(websocketpp::connection_hdl connection, const message_ptr& message);
 		void handle_socket_open(websocketpp::connection_hdl connection);
 
 	public:
 		chrome_debug_connector(int port);
+		void start_capture();
 	};
 }
