@@ -1,3 +1,5 @@
+#include "web-video-capture.hpp"
+
 #include "logger.hpp"
 #include "chrome-finder.hpp"
 #include "chrome-debug-connector.hpp"
@@ -44,6 +46,11 @@ int main(const int argument_count, const char** arguments)
 	auto const debug_connector = chrome_debug_connector(debug_port);
 
 	Process::kill(chrome_process.get_id());
+
+	int exit_code;
+	while(!chrome_process.try_get_exit_status(exit_code))
+	{		
+	}
 
 	filesystem::remove_all(temp_chrome_profile_path);
 

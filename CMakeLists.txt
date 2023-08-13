@@ -11,6 +11,9 @@ project(web-video-capture LANGUAGES C CXX)
 add_executable(web-video-capture "src/web-video-capture.cpp" "src/exceptions.hpp" "src/chrome-finder.cpp" "src/chrome-debug-connector.cpp" )
 
 set_property(TARGET web-video-capture PROPERTY CXX_STANDARD 20)
+set_property(TARGET web-video-capture PROPERTY COMPILE_OPTIONS "/Zc:__cplusplus")
+
+target_compile_definitions(web-video-capture INTERFACE ASIO_STANDALONE)
 
 add_subdirectory(deps)
 
@@ -18,12 +21,19 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	add_compile_definitions("DEBUG")
 endif()
 
-get_property(tiny_process_library_dir GLOBAL PROPERTY TINY_PROCESS_LIBRARY_SOURCE_DIR)
-get_property(tiny_process_library_build GLOBAL PROPERTY TINY_PROCESS_LIBRARY_BUILD_DIR)
+add_compile_definitions("ASIO_STANDALONE")
+
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+get_property(asio_src GLOBAL PROPERTY ASIO_SOURCE_DIR)
+get_property(websocketpp_src GLOBAL PROPERTY WEBSOCKETPP_SOURCE_DIR)
+get_property(tiny_process_library_src GLOBAL PROPERTY TINY_PROCESS_LIBRARY_SOURCE_DIR)
+get_property(tiny_process_library_bin GLOBAL PROPERTY TINY_PROCESS_LIBRARY_BUILD_DIR)
 get_property(fmt_src GLOBAL PROPERTY FMT_SOURCE_DIR)
 get_property(fmt_bin GLOBAL PROPERTY FMT_BUILD_DIR)
 get_property(curl_src GLOBAL PROPERTY CURL_SOURCE_DIR)
 get_property(curl_bin GLOBAL PROPERTY CURL_BUILD_DIR)
+get_property(json_src GLOBAL PROPERTY JSON_SOURCE_DIR)
 
 target_link_directories(web-video-capture PUBLIC "${tiny_process_library_build}" "${fmt_bin}" "${curl_bin}/lib")
 
@@ -65,10 +75,11 @@ else()
 endif()
 
 include_directories(
-	websocketpp
+	"${asio_src}/asio/include"
+	"${websocketpp_src}"
 	"${cxxopts_SOURCE_DIR}/include"
-	"${tiny_process_library_dir}"
-	"${json_dir}/include"
+	"${tiny_process_library_src}"
+	"${json_src}/include"
 	"${fmt_src}/include"
 	"${curl_src}/include"
 )
