@@ -11,7 +11,10 @@ project(web-video-capture LANGUAGES C CXX)
 add_executable(web-video-capture "src/web-video-capture.cpp" "src/exceptions.hpp" "src/chrome-finder.cpp" "src/chrome-debug-connector.cpp" )
 
 set_property(TARGET web-video-capture PROPERTY CXX_STANDARD 20)
-set_property(TARGET web-video-capture PROPERTY COMPILE_OPTIONS "/Zc:__cplusplus")
+
+if(MSVC)
+	set_property(TARGET web-video-capture PROPERTY COMPILE_OPTIONS "/Zc:__cplusplus")
+endif()
 
 target_compile_definitions(web-video-capture INTERFACE ASIO_STANDALONE)
 
