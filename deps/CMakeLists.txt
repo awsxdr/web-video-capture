@@ -1,7 +1,0 @@
-add_subdirectory(tiny-process-library)
-add_subdirectory(asio)
-add_subdirectory(curl)
-add_subdirectory(websocketpp)
-add_subdirectory(json)
-add_subdirectory(cxxopts)
-add_subdirectory(fmt)
