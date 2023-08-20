@@ -8,7 +8,6 @@
 
 #include <chrono>
 #include <fstream>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <thread>
@@ -24,6 +23,7 @@ int write_curl_buffer(const char* data, size_t size, size_t member_count, string
 websocketpp::log::level get_socket_level_for_logging_level(log_levels log_level);
 
 chrome_debug_connector::chrome_debug_connector(int port) :
+	is_open_(false),
 	next_message_id_(0)
 {
 	auto const debug_info_json = get_debug_info_json(port);
@@ -94,10 +94,6 @@ void chrome_debug_connector::send_message(const std::string method, const nlohma
 
 void chrome_debug_connector::handle_message(const websocketpp::connection_hdl connection, const message_ptr& message)
 {
-	//ofstream file(R"(C:\Users\adage\Desktop\test.png)");
-	ofstream file;
-	file.open("test.png", std::ios_base::binary);
-
 	auto const payload = message->get_payload();
 	auto const json = json::parse(payload);
 
@@ -106,10 +102,13 @@ void chrome_debug_connector::handle_message(const websocketpp::connection_hdl co
 		return;
 	}
 
+	ofstream file;
+	file.open("test.png", std::ios_base::binary);
+
 	auto const data = json["params"]["data"].get<string>();
 	auto const decoded_data = websocketpp::base64_decode(data);
 
-	file.write(decoded_data.c_str(), decoded_data.length());
+	file.write(decoded_data.c_str(), static_cast<long long>(decoded_data.length()));
 	file.flush();
 	file.close();
 }
@@ -157,9 +156,11 @@ int write_curl_buffer(const char* data, const size_t size, const size_t member_c
 	if (buffer == nullptr)
 		return 0;
 
-	buffer->append(data, size * member_count);
+	auto const bytes_to_write = size * member_count;
 
-	return size * member_count;
+	buffer->append(data, bytes_to_write);
+
+	return static_cast<int>(bytes_to_write);
 }
 
 websocketpp::log::level get_socket_level_for_logging_level(const log_levels log_level)

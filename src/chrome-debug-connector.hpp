@@ -2,7 +2,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 #include <websocketpp/config/asio_no_tls_client.hpp>
@@ -31,7 +33,12 @@ namespace web_video_capture
 		void handle_socket_open(websocketpp::connection_hdl connection);
 
 	public:
+		typedef std::function<void(unsigned char*)> frame_received;
+
 		chrome_debug_connector(int port);
 		void start_capture();
+
+		std::optional<frame_received> frame_received_handler;
 	};
+
 }
